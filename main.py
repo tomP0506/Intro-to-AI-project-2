@@ -58,9 +58,10 @@ def adversarial_search(
         search budget with enough margin to satisfy that hard limit.
     """
     MAX_DEPTH = 10
-    action, value = max_value(problem, state, float('-inf'), float('inf'), MAX_DEPTH)
+
+    action, value = mini_max(problem, state, '-inf', 'inf', MAX_DEPTH)
     return action
-    # raise NotImplementedError
+
 
 #heuristic that returns a value between -1 and 1 to estimate utility of a non terminal state
 def heuristic(game: AdversarialSearchProblem, state: StateT) -> float:
@@ -86,7 +87,6 @@ def mini_max(game: AdversarialSearchProblem[StateT, ActionT, PlayerT], state: St
 
     # check children of current node to find best
     for action in game.actions(state):
-
         #if Max player
         if max_player_bool:
         # get the child utility for this action
@@ -102,11 +102,7 @@ def mini_max(game: AdversarialSearchProblem[StateT, ActionT, PlayerT], state: St
                 return best_action, max_util
 
             # update alpha for next children
-            alpha = max(alpha, max_util)
-            
-
-            
-
+            alpha = max(alpha, max_util)   
         #if MIN player
         else:
         # get the child utility for this action
