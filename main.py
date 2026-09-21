@@ -59,16 +59,18 @@ def adversarial_search(
     """
     MAX_DEPTH = 10
 
-    action, value = mini_max(problem, state, '-inf', 'inf', MAX_DEPTH)
+    action, value = alpha_beta(problem, state, '-inf', 'inf', MAX_DEPTH)
     return action
 
 
 #heuristic that returns a value between -1 and 1 to estimate utility of a non terminal state
 def heuristic(game: AdversarialSearchProblem, state: StateT) -> float:
+    # for every possible combination of four 
+
     raise NotImplementedError
 
 
-def mini_max(game: AdversarialSearchProblem[StateT, ActionT, PlayerT], state: StateT, alpha, beta, depth) -> tuple[ActionT | None, float]:
+def alpha_beta(game: AdversarialSearchProblem[StateT, ActionT, PlayerT], state: StateT, alpha, beta, depth) -> tuple[ActionT | None, float]:
     # if the game is a terminal state, return just the utility
     if game.is_terminal(state):
         return None, game.utility(state, game.to_move(state))
@@ -90,7 +92,7 @@ def mini_max(game: AdversarialSearchProblem[StateT, ActionT, PlayerT], state: St
         #if Max player
         if max_player_bool:
         # get the child utility for this action
-            _ , child_util = mini_max(game, game.result(state, action), alpha, beta, depth - 1)
+            _ , child_util = alpha_beta(game, game.result(state, action), alpha, beta, depth - 1)
 
             # if child util is greater than the current maximum, set max to child util and action
             if child_util > max_util:
@@ -106,7 +108,7 @@ def mini_max(game: AdversarialSearchProblem[StateT, ActionT, PlayerT], state: St
         #if MIN player
         else:
         # get the child utility for this action
-            _ , child_util = mini_max(game, game.result(state, action), alpha, beta, depth - 1)
+            _ , child_util = alpha_beta(game, game.result(state, action), alpha, beta, depth - 1)
     
             # if child util is less than the current minimum, set min to child util and action
             if child_util < min_util:
