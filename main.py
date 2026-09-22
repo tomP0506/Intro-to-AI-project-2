@@ -19,10 +19,26 @@ except ImportError:
         StateT,
         
     )
+try:
+    from .cylindrical_connect_four import (
+        WINDOWS,
+        CylindricalConnectFour,
+        opponent,
+        iter_window_cells,
+    )
+               
+except ImportError:
+    from cylindrical_connect_four import (
+        WINDOWS,
+        CylindricalConnectFour,
+        opponent,
+        iter_window_cells,
+        
+    )
 
 
 # Replace this with the name your group wants displayed in the tournament.
-GROUP_NAME = "replace-with-your-group-name"
+GROUP_NAME = "NULL"
 
 
 def adversarial_search(
@@ -57,17 +73,68 @@ def adversarial_search(
         Every call must return in less than 10 seconds.  Choose an internal
         search budget with enough margin to satisfy that hard limit.
     """
-    MAX_DEPTH = 10
 
-    action, value = alpha_beta(problem, state, '-inf', 'inf', MAX_DEPTH)
+    #test first
+    MAX_DEPTH = 1
+
+    action, value = alpha_beta(problem, state, float('-inf'), float('inf'), MAX_DEPTH)
     return action
 
 
 #heuristic that returns a value between -1 and 1 to estimate utility of a non terminal state
 def heuristic(game: AdversarialSearchProblem, state: StateT) -> float:
-    # for every possible combination of four 
+    from cylindrical_connect_four import RED, YELLOW, opponent as get_opponent
+    player = state.player
+    opponent = get_opponent
+    iterable = iter_window_cells(state)
 
-    raise NotImplementedError
+    total_value = 0
+    
+    # for every possible combination of four-tile-windows
+    while True:
+        window_cells = [next(iterable, None)]
+
+        if window_cells[0] is None:
+            break
+
+        player_pieces = 0
+        opponent_pieces = 0
+        empty_cells = 0
+        
+        window_value = 0
+        for cell in window_cells:
+            if (cell == opponent):
+                opponent_pieces += 1
+            elif (cell == player):
+                player_pieces += 1
+            else:
+                empty_cells += 1
+
+        if player_pieces == 4:
+            return 1.0
+        elif opponent_pieces == 4:
+            return -1.0 
+        elif player_pieces == 3 and empty_cells == 1:
+            window_value += 0.05
+        elif opponent_pieces == 3 and empty_cells == 1:
+            window_value -= 0.05
+            
+        elif player_pieces == 2 and empty_cells == 2:
+            window_value += 0.005
+        elif opponent_pieces == 2 and empty_cells == 2:
+            window_value -= 0.005
+        total_value += window_value
+    return max(-0.99, min(0.99, total_value))
+
+
+        
+   
+    
+
+
+    
+    
+    
 
 
 def alpha_beta(game: AdversarialSearchProblem[StateT, ActionT, PlayerT], state: StateT, alpha, beta, depth) -> tuple[ActionT | None, float]:
@@ -124,5 +191,7 @@ def alpha_beta(game: AdversarialSearchProblem[StateT, ActionT, PlayerT], state: 
             
     return best_action, max_util if max_player_bool else min_util
     
+
+        
 
     
