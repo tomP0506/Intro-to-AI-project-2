@@ -44,9 +44,9 @@ except ImportError:
 GROUP_NAME = "NULL"
 
 # Pre-defined non-linear weights for open window threats
-SCORE_3 = 100.0
-SCORE_2 = 10.0
-SCORE_1 = 1.0
+SCORE_3 = 0.99
+SCORE_2 = 0.099
+SCORE_1 = 0.0099
 
 def adversarial_search(
     problem: AdversarialSearchProblem[StateT, ActionT, PlayerT],
@@ -129,7 +129,6 @@ def heuristic(game: AdversarialSearchProblem, state: StateT, player: PlayerT) ->
                 total_score -= SCORE_1
 
     return total_score
-    
 
 def get_ordered_actions(game: AdversarialSearchProblem, state: StateT) -> list[ActionT]:
     #Orders legal actions starting from center columns outwards to maximize Alpha-Beta cutoffs
@@ -192,8 +191,3 @@ def alpha_beta(game: AdversarialSearchProblem[StateT, ActionT, PlayerT], state: 
             beta = min(beta, min_util)
             
     return best_action, max_util if max_player_bool else min_util
-    
-
-        
-
-    
