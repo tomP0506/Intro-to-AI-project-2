@@ -41,7 +41,7 @@ except ImportError:
 
 
 # Replace this with the name your group wants displayed in the tournament.
-GROUP_NAME = "NULL"
+GROUP_NAME = "NULL (Evan, Tom, Lucas)"
 
 # Pre-defined non-linear weights for open window threats
 SCORE_3 = 0.99
