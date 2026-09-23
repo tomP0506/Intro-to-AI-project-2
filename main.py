@@ -82,7 +82,7 @@ def adversarial_search(
     """
 
     #test first
-    MAX_DEPTH = 6
+    MAX_DEPTH = 7
 
     action, value = alpha_beta(problem, state, float('-inf'), float('inf'), MAX_DEPTH, problem.to_move(state))
     return action
