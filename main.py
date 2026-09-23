@@ -44,12 +44,9 @@ except ImportError:
 GROUP_NAME = "NULL (Evan, Tom, Lucas)"
 
 # Pre-defined non-linear weights for open window threats
-SCORE_5 = 0.0099
-SCORE_4 = 0.089
-SCORE_3 = 0.099
-SCORE_2 = 0.89
-SCORE_1 = 0.99
-
+SCORE_3 = 0.99
+SCORE_2 = 0.099
+SCORE_1 = 0.0099
 
 def adversarial_search(
     problem: AdversarialSearchProblem[StateT, ActionT, PlayerT],
@@ -85,7 +82,7 @@ def adversarial_search(
     """
 
     #test first
-    MAX_DEPTH = 6
+    MAX_DEPTH = 7
 
     action, value = alpha_beta(problem, state, float('-inf'), float('inf'), MAX_DEPTH, problem.to_move(state))
     return action
@@ -101,26 +98,16 @@ def heuristic(game: AdversarialSearchProblem, state: StateT, player: PlayerT) ->
 
     total_score = 0.0
 
-
     # Iterate over all 4-cell windows on the board
-    for window in WINDOWS:
+    for window_cells in iter_window_cells(state):
         player_pieces = 0
         opponent_pieces = 0
-        playable = []
 
-        for row, column in window:
-            cell = state.cell(row, column)
-
-            if cell == opponent:
-                opponent_pieces += 1
-
-            elif cell == player:
-                player_pieces += 1
-
-            else:
-                # Empty cell
-                if row == 0 or state.cell(row - 1, column) is not None:
-                    playable.append((row, column))
+        for cell in window_cells:
+            if (cell == opponent):
+                opponent_pieces += 1 # Keep positive for simplicity
+            elif (cell == player):
+                player_pieces += 1 
 
         # Skip windows containing pieces from BOTH players (neither can win this window)
         if player_pieces > 0 and opponent_pieces > 0:
@@ -128,30 +115,18 @@ def heuristic(game: AdversarialSearchProblem, state: StateT, player: PlayerT) ->
 
         if player_pieces > 0:
             if player_pieces == 3:
-                if len(playable) == 1:
-                    total_score += SCORE_1 
-                else:
-                    total_score += SCORE_2
+                total_score += SCORE_3
             elif player_pieces == 2:
-                if len(playable) == 2:
-                    total_score += SCORE_3
-                elif len(playable) == 1:
-                    total_score += SCORE_4
+                total_score += SCORE_2
             elif player_pieces == 1:
-                total_score += SCORE_5
+                total_score += SCORE_1
         elif opponent_pieces > 0:
             if opponent_pieces == 3:
-                if len(playable) == 1:
-                    total_score -= SCORE_1 
-                else:
-                    total_score -= SCORE_2
+                total_score -= SCORE_3
             elif opponent_pieces == 2:
-                if len(playable) == 2:
-                    total_score -= SCORE_3
-                elif len(playable) == 1:
-                    total_score -= SCORE_4
+                total_score -= SCORE_2
             elif opponent_pieces == 1:
-                total_score -= SCORE_5
+                total_score -= SCORE_1
 
     return total_score
 
@@ -165,6 +140,7 @@ def alpha_beta(game: AdversarialSearchProblem[StateT, ActionT, PlayerT], state: 
         return None, heuristic(game, state, player)
 
     # set up variables to store and compare to find the best action and its associated utility
+    
     best_action = None
     max_util = float('-inf')
     min_util = float('inf')
