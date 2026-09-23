@@ -43,6 +43,10 @@ except ImportError:
 # Replace this with the name your group wants displayed in the tournament.
 GROUP_NAME = "NULL"
 
+# Pre-defined non-linear weights for open window threats
+SCORE_3 = 100.0
+SCORE_2 = 10.0
+SCORE_1 = 1.0
 
 def adversarial_search(
     problem: AdversarialSearchProblem[StateT, ActionT, PlayerT],
@@ -92,61 +96,114 @@ def heuristic(game: AdversarialSearchProblem, state: StateT, player: PlayerT) ->
     else:
         opponent = RED
 
-    iterable = iter_window_cells(state)
+    total_score = 0.0
 
-    best_player = 0.0
-    best_opponent = 0.0
-    
-    # for every possible combination of four-tile-windows
-    # runs for all window cells. Works by setting window_cells to next and checking if it is None
-    while (window_cells := next(iterable, None)) is not None:
-
-        if window_cells is None:
-            break
-
-        # count player pieces as positive and opponent as negative
+    # Iterate over all 4-cell windows on the board
+    for window_cells in iter_window_cells(state):
         player_pieces = 0
         opponent_pieces = 0
-        empty_cells = 0
-        
-        window_value = 0
+
         for cell in window_cells:
             if (cell == opponent):
-                opponent_pieces -= 1
+                opponent_pieces += 1 # Keep positive for simplicity
             elif (cell == player):
-                player_pieces += 1
-            # else:
-            #     empty_cells += 1
+                player_pieces += 1 
 
-        #if there are both color pieces in this window, there is no way this window can be won by a player
-        if player_pieces and opponent_pieces:
+        # Skip windows containing pieces from BOTH players (neither can win this window)
+        if player_pieces > 0 and opponent_pieces > 0:
             continue
-        # now this window only consists of one color and possibly empty spaces
 
-        # pieces will be either all opponent pieces or player pieces since one is 0
-        pieces = player_pieces + opponent_pieces
+        if player_pieces > 0:
+            if player_pieces == 3:
+                total_score += SCORE_3
+            elif player_pieces == 2:
+                total_score += SCORE_2
+            elif player_pieces == 1:
+                total_score += SCORE_1
+        elif opponent_pieces > 0:
+            if opponent_pieces == 3:
+                total_score -= SCORE_3
+            elif opponent_pieces == 2:
+                total_score -= SCORE_2
+            elif opponent_pieces == 1:
+                total_score -= SCORE_1
 
-        # utility is the utility of this window. Will be positive if it is players' pieces and negative if it is opponents'
-        utility = pieces * 0.25
+    return total_score
+    
 
-        # #return 1 or -1 if there are 4 pieces in the window
-        # if abs(pieces) == 4:
-        #     return utility
+    # # for every possible combination of four-tile-windows
+    # # runs for all window cells. Works by setting window_cells to next and checking if it is None
+    # while (window_cells := next(iterable, None)) is not None:
 
-        # assign best player or opponent by comparing with best so far
-        if utility >= 0:
-            best_player = max(best_player, utility)
-        else:
-            best_opponent = min(best_opponent, utility)
+    #     if window_cells is None:
+    #         break
 
-        #best won't get any better than this
-        if best_player == -0.75 and best_opponent == 0.75:
-            break
+    #     # count player pieces as positive and opponent as negative
+    #     player_pieces = 0
+    #     opponent_pieces = 0
+    #     empty_cells = 0
+        
+    #     window_value = 0
+    #     for cell in window_cells:
+    #         if (cell == opponent):
+    #             opponent_pieces -= 1
+    #         elif (cell == player):
+    #             player_pieces += 1
+    #         # else:
+    #         #     empty_cells += 1
 
-    # return best of both (Ex. 3 pieces is the player's best and 3 is the opponent's best, heuristic of this state would be 0)
-    return best_player + best_opponent
+    #     #if there are both color pieces in this window, there is no way this window can be won by a player
+    #     if player_pieces > 0 and opponent_pieces < 0:
+    #         continue
+    #     # now this window only consists of one color and possibly empty spaces
 
+    #     utility = 0
+    #     if player_pieces > 0:
+    #         if player_pieces == 3:
+    #             utility += SCORE_3
+    #         elif player_pieces == 2:
+    #             utility += SCORE_2
+    #         elif player_pieces == 1:
+    #             utility += SCORE_1
+    #     elif opponent_pieces < 0:
+    #         if opponent_pieces == -3:
+    #             utility -= SCORE_3
+    #         elif opponent_pieces == -2:
+    #             utility -= SCORE_2
+    #         elif opponent_pieces == -1:
+    #             utility -= SCORE_1
 
+        
+    #     # # pieces will be either all opponent pieces or player pieces since one is 0
+    #     # pieces = player_pieces + opponent_pieces
+
+    #     # # utility is the utility of this window. Will be positive if it is players' pieces and negative if it is opponents'
+    #     # utility = pieces * 0.25
+
+    #     # #return 1 or -1 if there are 4 pieces in the window
+    #     # if abs(pieces) == 4:
+    #     #     return utility
+
+    #     # assign best player or opponent by comparing with best so far
+    #     if utility >= 0:
+    #         best_player = max(best_player, utility)
+    #     else:
+    #         best_opponent = min(best_opponent, utility)
+
+    #     #best won't get any better than this
+    #     if best_player == -111.0 and best_opponent == 111.0:
+    #         break
+
+    # # return best of both (Ex. 3 pieces is the player's best and 3 is the opponent's best, heuristic of this state would be 0)
+    # return best_player + best_opponent
+
+def get_ordered_actions(game: AdversarialSearchProblem, state: StateT) -> list[ActionT]:
+    #Orders legal actions starting from center columns outwards to maximize Alpha-Beta cutoffs
+    actions = list(game.actions(state))
+    board_width = getattr(game, "columns", 7)
+    center = board_width / 2.0
+    actions.sort(key=lambda col: abs(col - center))
+    return actions
 
 def alpha_beta(game: AdversarialSearchProblem[StateT, ActionT, PlayerT], state: StateT, alpha, beta, depth, player : PlayerT) -> tuple[ActionT | None, float]:
     # if the game is a terminal state, return just the utility
@@ -166,7 +223,7 @@ def alpha_beta(game: AdversarialSearchProblem[StateT, ActionT, PlayerT], state: 
 
 
     # check children of current node to find best
-    for action in game.actions(state):
+    for action in get_ordered_actions(game, state):
         #if Max player
         if max_player_bool:
         # get the child utility for this action
