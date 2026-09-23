@@ -25,6 +25,8 @@ try:
         CylindricalConnectFour,
         opponent,
         iter_window_cells,
+        RED,
+        YELLOW,
     )
                
 except ImportError:
@@ -33,7 +35,8 @@ except ImportError:
         CylindricalConnectFour,
         opponent,
         iter_window_cells,
-        
+        RED,
+        YELLOW,
     )
 
 
@@ -75,7 +78,7 @@ def adversarial_search(
     """
 
     #test first
-    MAX_DEPTH = 5
+    MAX_DEPTH = 6
 
     action, value = alpha_beta(problem, state, float('-inf'), float('inf'), MAX_DEPTH, problem.to_move(state))
     return action
@@ -83,7 +86,7 @@ def adversarial_search(
 
 #heuristic that returns a value between -1 and 1 to estimate utility of a non terminal state
 def heuristic(game: AdversarialSearchProblem, state: StateT, player: PlayerT) -> float:
-    from cylindrical_connect_four import RED, YELLOW
+    # from cylindrical_connect_four import RED, YELLOW
     if player == RED:
         opponent = YELLOW
     else:
@@ -112,8 +115,8 @@ def heuristic(game: AdversarialSearchProblem, state: StateT, player: PlayerT) ->
                 opponent_pieces -= 1
             elif (cell == player):
                 player_pieces += 1
-            else:
-                empty_cells += 1
+            # else:
+            #     empty_cells += 1
 
         #if there are both color pieces in this window, there is no way this window can be won by a player
         if player_pieces and opponent_pieces:
@@ -126,15 +129,19 @@ def heuristic(game: AdversarialSearchProblem, state: StateT, player: PlayerT) ->
         # utility is the utility of this window. Will be positive if it is players' pieces and negative if it is opponents'
         utility = pieces * 0.25
 
-        #return 1 or -1 if there are 4 pieces in the window
-        if abs(pieces) == 4:
-            return utility
+        # #return 1 or -1 if there are 4 pieces in the window
+        # if abs(pieces) == 4:
+        #     return utility
 
         # assign best player or opponent by comparing with best so far
         if utility >= 0:
             best_player = max(best_player, utility)
         else:
             best_opponent = min(best_opponent, utility)
+
+        #best won't get any better than this
+        if best_player == -0.75 and best_opponent == 0.75:
+            break
 
     # return best of both (Ex. 3 pieces is the player's best and 3 is the opponent's best, heuristic of this state would be 0)
     return best_player + best_opponent
