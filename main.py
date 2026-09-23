@@ -44,9 +44,9 @@ except ImportError:
 GROUP_NAME = "NULL"
 
 # Pre-defined non-linear weights for open window threats
-SCORE_3 = 100.0
-SCORE_2 = 10.0
-SCORE_1 = 1.0
+SCORE_3 = 0.99
+SCORE_2 = 0.099
+SCORE_1 = 0.0099
 
 def adversarial_search(
     problem: AdversarialSearchProblem[StateT, ActionT, PlayerT],
@@ -129,73 +129,6 @@ def heuristic(game: AdversarialSearchProblem, state: StateT, player: PlayerT) ->
                 total_score -= SCORE_1
 
     return total_score
-    
-
-    # # for every possible combination of four-tile-windows
-    # # runs for all window cells. Works by setting window_cells to next and checking if it is None
-    # while (window_cells := next(iterable, None)) is not None:
-
-    #     if window_cells is None:
-    #         break
-
-    #     # count player pieces as positive and opponent as negative
-    #     player_pieces = 0
-    #     opponent_pieces = 0
-    #     empty_cells = 0
-        
-    #     window_value = 0
-    #     for cell in window_cells:
-    #         if (cell == opponent):
-    #             opponent_pieces -= 1
-    #         elif (cell == player):
-    #             player_pieces += 1
-    #         # else:
-    #         #     empty_cells += 1
-
-    #     #if there are both color pieces in this window, there is no way this window can be won by a player
-    #     if player_pieces > 0 and opponent_pieces < 0:
-    #         continue
-    #     # now this window only consists of one color and possibly empty spaces
-
-    #     utility = 0
-    #     if player_pieces > 0:
-    #         if player_pieces == 3:
-    #             utility += SCORE_3
-    #         elif player_pieces == 2:
-    #             utility += SCORE_2
-    #         elif player_pieces == 1:
-    #             utility += SCORE_1
-    #     elif opponent_pieces < 0:
-    #         if opponent_pieces == -3:
-    #             utility -= SCORE_3
-    #         elif opponent_pieces == -2:
-    #             utility -= SCORE_2
-    #         elif opponent_pieces == -1:
-    #             utility -= SCORE_1
-
-        
-    #     # # pieces will be either all opponent pieces or player pieces since one is 0
-    #     # pieces = player_pieces + opponent_pieces
-
-    #     # # utility is the utility of this window. Will be positive if it is players' pieces and negative if it is opponents'
-    #     # utility = pieces * 0.25
-
-    #     # #return 1 or -1 if there are 4 pieces in the window
-    #     # if abs(pieces) == 4:
-    #     #     return utility
-
-    #     # assign best player or opponent by comparing with best so far
-    #     if utility >= 0:
-    #         best_player = max(best_player, utility)
-    #     else:
-    #         best_opponent = min(best_opponent, utility)
-
-    #     #best won't get any better than this
-    #     if best_player == -111.0 and best_opponent == 111.0:
-    #         break
-
-    # # return best of both (Ex. 3 pieces is the player's best and 3 is the opponent's best, heuristic of this state would be 0)
-    # return best_player + best_opponent
 
 def get_ordered_actions(game: AdversarialSearchProblem, state: StateT) -> list[ActionT]:
     #Orders legal actions starting from center columns outwards to maximize Alpha-Beta cutoffs
@@ -258,8 +191,3 @@ def alpha_beta(game: AdversarialSearchProblem[StateT, ActionT, PlayerT], state: 
             beta = min(beta, min_util)
             
     return best_action, max_util if max_player_bool else min_util
-    
-
-        
-
-    
