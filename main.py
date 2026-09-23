@@ -75,28 +75,33 @@ def adversarial_search(
     """
 
     #test first
-    MAX_DEPTH = 1
+    MAX_DEPTH = 5
 
-    action, value = alpha_beta(problem, state, float('-inf'), float('inf'), MAX_DEPTH)
+    action, value = alpha_beta(problem, state, float('-inf'), float('inf'), MAX_DEPTH, problem.to_move(state))
     return action
 
 
 #heuristic that returns a value between -1 and 1 to estimate utility of a non terminal state
-def heuristic(game: AdversarialSearchProblem, state: StateT) -> float:
-    from cylindrical_connect_four import RED, YELLOW, opponent as get_opponent
-    player = state.player
-    opponent = get_opponent
+def heuristic(game: AdversarialSearchProblem, state: StateT, player: PlayerT) -> float:
+    from cylindrical_connect_four import RED, YELLOW
+    if player == RED:
+        opponent = YELLOW
+    else:
+        opponent = RED
+
     iterable = iter_window_cells(state)
 
-    total_value = 0
+    best_player = 0.0
+    best_opponent = 0.0
     
     # for every possible combination of four-tile-windows
-    while True:
-        window_cells = [next(iterable, None)]
+    # runs for all window cells. Works by setting window_cells to next and checking if it is None
+    while (window_cells := next(iterable, None)) is not None:
 
-        if window_cells[0] is None:
+        if window_cells is None:
             break
 
+        # count player pieces as positive and opponent as negative
         player_pieces = 0
         opponent_pieces = 0
         empty_cells = 0
@@ -104,54 +109,53 @@ def heuristic(game: AdversarialSearchProblem, state: StateT) -> float:
         window_value = 0
         for cell in window_cells:
             if (cell == opponent):
-                opponent_pieces += 1
+                opponent_pieces -= 1
             elif (cell == player):
                 player_pieces += 1
             else:
                 empty_cells += 1
 
-        if player_pieces == 4:
-            return 1.0
-        elif opponent_pieces == 4:
-            return -1.0 
-        elif player_pieces == 3 and empty_cells == 1:
-            window_value += 0.05
-        elif opponent_pieces == 3 and empty_cells == 1:
-            window_value -= 0.05
-            
-        elif player_pieces == 2 and empty_cells == 2:
-            window_value += 0.005
-        elif opponent_pieces == 2 and empty_cells == 2:
-            window_value -= 0.005
-        total_value += window_value
-    return max(-0.99, min(0.99, total_value))
+        #if there are both color pieces in this window, there is no way this window can be won by a player
+        if player_pieces and opponent_pieces:
+            continue
+        # now this window only consists of one color and possibly empty spaces
+
+        # pieces will be either all opponent pieces or player pieces since one is 0
+        pieces = player_pieces + opponent_pieces
+
+        # utility is the utility of this window. Will be positive if it is players' pieces and negative if it is opponents'
+        utility = pieces * 0.25
+
+        #return 1 or -1 if there are 4 pieces in the window
+        if abs(pieces) == 4:
+            return utility
+
+        # assign best player or opponent by comparing with best so far
+        if utility >= 0:
+            best_player = max(best_player, utility)
+        else:
+            best_opponent = min(best_opponent, utility)
+
+    # return best of both (Ex. 3 pieces is the player's best and 3 is the opponent's best, heuristic of this state would be 0)
+    return best_player + best_opponent
 
 
-        
-   
-    
 
-
-    
-    
-    
-
-
-def alpha_beta(game: AdversarialSearchProblem[StateT, ActionT, PlayerT], state: StateT, alpha, beta, depth) -> tuple[ActionT | None, float]:
+def alpha_beta(game: AdversarialSearchProblem[StateT, ActionT, PlayerT], state: StateT, alpha, beta, depth, player : PlayerT) -> tuple[ActionT | None, float]:
     # if the game is a terminal state, return just the utility
     if game.is_terminal(state):
-        return None, game.utility(state, game.to_move(state))
+        return None, game.utility(state, player)
 
     # if this iteration depth is at 0, then don't continue and return a heuristic estimate of the state
     if depth == 0:
-        return None, heuristic(game, state)
+        return None, heuristic(game, state, player)
 
     # set up variables to store and compare to find the best action and its associated utility
     
     best_action = None
     max_util = float('-inf')
     min_util = float('inf')
-    max_player_bool = game.to_move(state) == state.player
+    max_player_bool = game.to_move(state) == player
 
 
     # check children of current node to find best
@@ -159,7 +163,7 @@ def alpha_beta(game: AdversarialSearchProblem[StateT, ActionT, PlayerT], state: 
         #if Max player
         if max_player_bool:
         # get the child utility for this action
-            _ , child_util = alpha_beta(game, game.result(state, action), alpha, beta, depth - 1)
+            _ , child_util = alpha_beta(game, game.result(state, action), alpha, beta, depth - 1, player)
 
             # if child util is greater than the current maximum, set max to child util and action
             if child_util > max_util:
@@ -175,7 +179,7 @@ def alpha_beta(game: AdversarialSearchProblem[StateT, ActionT, PlayerT], state: 
         #if MIN player
         else:
         # get the child utility for this action
-            _ , child_util = alpha_beta(game, game.result(state, action), alpha, beta, depth - 1)
+            _ , child_util = alpha_beta(game, game.result(state, action), alpha, beta, depth - 1, player)
     
             # if child util is less than the current minimum, set min to child util and action
             if child_util < min_util:
