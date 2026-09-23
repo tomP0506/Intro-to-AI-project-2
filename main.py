@@ -130,14 +130,6 @@ def heuristic(game: AdversarialSearchProblem, state: StateT, player: PlayerT) ->
 
     return total_score
 
-def get_ordered_actions(game: AdversarialSearchProblem, state: StateT) -> list[ActionT]:
-    #Orders legal actions starting from center columns outwards to maximize Alpha-Beta cutoffs
-    actions = list(game.actions(state))
-    board_width = getattr(game, "columns", 7)
-    center = board_width / 2.0
-    actions.sort(key=lambda col: abs(col - center))
-    return actions
-
 def alpha_beta(game: AdversarialSearchProblem[StateT, ActionT, PlayerT], state: StateT, alpha, beta, depth, player : PlayerT) -> tuple[ActionT | None, float]:
     # if the game is a terminal state, return just the utility
     if game.is_terminal(state):
@@ -156,7 +148,7 @@ def alpha_beta(game: AdversarialSearchProblem[StateT, ActionT, PlayerT], state: 
 
 
     # check children of current node to find best
-    for action in get_ordered_actions(game, state):
+    for action in game.actions(state):
         #if Max player
         if max_player_bool:
         # get the child utility for this action
